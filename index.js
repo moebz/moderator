@@ -1,6 +1,9 @@
+require("dotenv").config();
 const fastify = require("fastify")();
 const path = require("path");
 const fs = require("fs");
+const axios = require("axios");
+const { detectToxicContent } = require("./utils/awsComprehend");
 
 // Register PostgreSQL plugin
 fastify.register(require("@fastify/postgres"), {
@@ -183,11 +186,73 @@ fastify.post("/verify", async (request, reply) => {
   }
 });
 
+fastify.post("/verify-with-comprehend", async (request, reply) => {
+  const { text } = request.body;
+
+  if (!text) {
+    return reply.code(400).send({ error: "Text is required" });
+  }
+
+  try {
+    const result = await detectToxicContent(text);
+    return {
+      isToxic: result.Toxicity > 0.5,
+      scores: result.Labels.reduce((acc, label) => {
+        acc[label.Name] = label.Score;
+        return acc;
+      }, {}),
+    };
+  } catch (error) {
+    console.error("Error verifying text: ", error);
+    return reply.code(500).send({ error: "Failed to analyze content" });
+  }
+});
+
+fastify.post("/verify-with-ca", async (request, reply) => {
+  const { text } = request.body;
+
+  if (!text) {
+    return reply.code(400).send({ error: "Text is required" });
+  }
+
+  try {
+    const response = await axios.post(
+      `https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=${process.env.GOOGLE_CLOUD_API_KEY}`,
+      {
+        comment: { text },
+        languages: ["en"],
+        requestedAttributes: {
+          TOXICITY: {},
+          SEVERE_TOXICITY: {},
+          IDENTITY_ATTACK: {},
+          INSULT: {},
+          PROFANITY: {},
+          THREAT: {},
+          // SEXUALLY_EXPLICIT: {}, // Experimental - solo inglés
+          // FLIRTATION: {}, // Experimental - solo inglés
+        },
+        doNotStore: true,
+      },
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Perspective API error:", error);
+    return reply.code(500).send({
+      error: "Analysis failed",
+      details: error.response?.data?.error || error.message,
+    });
+  }
+});
+
 // Run the server!
 fastify.listen({ port: 3000 }, function (err, address) {
   if (err) {
     fastify.log.error(err);
     process.exit(1);
   }
-  // Server is now listening on ${address}
+  console.log(`Server is now listening on ${address}`);
 });
