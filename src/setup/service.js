@@ -19,8 +19,22 @@ const getTables = async (client) => {
   return result.rows;
 };
 
+const createClientTable = async (client) => {
+  const query = `
+    CREATE TABLE IF NOT EXISTS clients (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      api_key VARCHAR(255) NOT NULL UNIQUE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+  const result = await client.query(query);
+  return result;
+};
+
 module.exports = {
   testConnection,
   getDatabases,
   getTables,
+  createClientTable,
 };

@@ -1,4 +1,5 @@
 const fastify = require("fastify")();
+const { adminAuth } = require("./middleware/adminAuth");
 const { databaseRoutes } = require("./setup/routes");
 const { verifyRoutes } = require("./verify/routes");
 const { wordRoutes } = require("./words/routes");
@@ -11,8 +12,12 @@ fastify.register(require("@fastify/postgres"), {
   debug: true,
 });
 
-fastify.register(databaseRoutes, { prefix: "/api/database" });
-fastify.register(verifyRoutes, { prefix: "/api/verify" });
-fastify.register(wordRoutes, { prefix: "/api/words" });
+fastify.register(verifyRoutes, {
+  prefix: "/api/verify",
+});
+fastify.register(databaseRoutes, {
+  prefix: "/api/database",
+});
+fastify.register(wordRoutes, { prefix: "/api/words", preHandler: adminAuth });
 
 module.exports = fastify;
