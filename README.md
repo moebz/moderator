@@ -22,4 +22,7 @@
 - **PostgreSQL**: Es necesario tener PostgreSQL instalado y en funcionamiento. Puedes obtenerlo en [https://www.postgresql.org/download/](https://www.postgresql.org/download/).
 
 
+## Iniciar el proyecto
+
+node index.js
 
