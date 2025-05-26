@@ -1,17 +1,21 @@
+const { dbHandler } = require("../utils/dbHandler");
 const {
   verifyWithLevenshtein,
   verifyWithComprehend,
   verifyWithPerspectiveAPI,
 } = require("./service");
-const { dbHandler } = require("../../utils/dbHandler");
 
 async function verifyRoutes(fastify) {
-  fastify.post("/verify", async (request, reply) => {
+  fastify.post("/leven", async (request, reply) => {
     const { text } = request.body;
-    await dbHandler(fastify, (client) => verifyWithLevenshtein(client, text), reply);
+    await dbHandler(
+      fastify,
+      (client) => verifyWithLevenshtein(client, text),
+      reply
+    );
   });
 
-  fastify.post("/verify-with-comprehend", async (request, reply) => {
+  fastify.post("/comprehend", async (request, reply) => {
     const { text } = request.body;
 
     try {
@@ -19,11 +23,13 @@ async function verifyRoutes(fastify) {
       reply.send(result);
     } catch (err) {
       console.error("Error verifying with Comprehend:", err);
-      reply.code(500).send({ error: "Failed to analyze content", details: err.message });
+      reply
+        .code(500)
+        .send({ error: "Failed to analyze content", details: err.message });
     }
   });
 
-  fastify.post("/verify-with-ca", async (request, reply) => {
+  fastify.post("/analyze", async (request, reply) => {
     const { text } = request.body;
 
     try {

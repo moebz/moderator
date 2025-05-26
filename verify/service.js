@@ -1,12 +1,12 @@
 const axios = require("axios");
-const { detectToxicContent } = require("../../utils/awsComprehend");
+const { detectToxicContent } = require("../utils/awsComprehend");
 
 const verifyWithLevenshtein = async (client, text) => {
-  // Split the text into words
-  const words = text.split(/\s+/);
+  // Transform characters to spaces
+  const sanitizedText = text.replace(/[^a-zA-Z0-9\s]/g, " ");
 
-  // Remove non-alphanumeric characters from each word
-  const sanitizedWords = words.map((word) => word.replace(/[^a-zA-Z0-9]/g, ""));
+  // Split the text into words by spaces
+  const words = sanitizedText.split(/\s+/);
 
   // Set a Levenshtein distance threshold
   const distanceThreshold = 1;
@@ -36,7 +36,11 @@ const verifyWithLevenshtein = async (client, text) => {
     LIMIT 1;
   `;
 
-  const result = await client.query(query, [sanitizedWords, distanceThreshold]);
+  const result = await client.query(query, [words, distanceThreshold]);
+
+  console.log("words:", words);
+
+  console.log("Levenshtein result:", result.rows);
 
   if (result.rows.length > 0) {
     return { match: true, word: result.rows[0].word };

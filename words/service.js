@@ -23,6 +23,11 @@ const insertWordsFromFile = async (client) => {
   }
 };
 
+const getAllWords = async (client) => {
+  const result = await client.query("SELECT id, word FROM words");
+  return result.rows;
+};
+
 const addWord = async (client, word) => {
   const result = await client.query(
     "INSERT INTO words (word) VALUES ($1) RETURNING *",
@@ -43,4 +48,5 @@ module.exports = {
   insertWordsFromFile,
   addWord,
   searchWord,
+  getAllWords,
 };
