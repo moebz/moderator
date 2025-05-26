@@ -21,13 +21,31 @@ const getTables = async (client) => {
 
 const createClientTable = async (client) => {
   const query = `
-    CREATE TABLE IF NOT EXISTS clients (
-      id SERIAL PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
-      api_key VARCHAR(255) NOT NULL UNIQUE,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  CREATE TABLE IF NOT EXISTS clients (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    api_key VARCHAR(255) NOT NULL UNIQUE,
+    feat_leven BOOLEAN DEFAULT false,
+    feat_persp BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
-  `;
+    `;
+  const result = await client.query(query);
+  return result;
+};
+
+const insertTestClient = async (client) => {
+  const query = `
+    INSERT INTO clients (name,
+    feat_leven,
+    feat_persp,
+    api_key) 
+    VALUES ('AwesomeBlog',
+    true,
+    true,
+    'TxlyMqTQ2xZEFCGZPeIRAd0qkS6Bui5u') 
+    ON CONFLICT (api_key) DO NOTHING;
+    `;
   const result = await client.query(query);
   return result;
 };
@@ -37,4 +55,5 @@ module.exports = {
   getDatabases,
   getTables,
   createClientTable,
+  insertTestClient,
 };

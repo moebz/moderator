@@ -73,7 +73,7 @@ const verifyWithPerspectiveAPI = async (text) => {
     `https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=${process.env.GOOGLE_CLOUD_API_KEY}`,
     {
       comment: { text },
-      languages: ["en"],
+      languages: ["es"],
       requestedAttributes: {
         TOXICITY: {},
         SEVERE_TOXICITY: {},
@@ -94,7 +94,73 @@ const verifyWithPerspectiveAPI = async (text) => {
   return response.data;
 };
 
+const go = async (client, apiClientToken, text) => {
+  if (!text) {
+    throw new Error("Text is required");
+  }
+
+  if (!apiClientToken) {
+    throw new Error("API client token is required");
+  }
+
+  const apiClientQuery = await client.query(
+    "SELECT * FROM clients WHERE api_key = $1",
+    [apiClientToken]
+  );
+
+  if (apiClientQuery.rows.length === 0) {
+    throw new Error("Invalid API client token");
+  }
+
+  const apiClient = apiClientQuery.rows[0];
+
+  let methodsUsed = [];
+
+  if (apiClient.feat_leven) {
+    methodsUsed.push("v1");
+
+    const levenResult = await verifyWithLevenshtein(client, text);
+
+    if (levenResult.match) {
+      return { shouldReject: true };
+    }
+  }
+
+  if (apiClient.feat_persp) {
+    methodsUsed.push("v2");
+
+    const perspectiveResult = await verifyWithPerspectiveAPI(text);
+
+    // Check if any of the scores exceed the threshold
+    const attributes = [
+      "TOXICITY",
+      "SEVERE_TOXICITY",
+      "IDENTITY_ATTACK",
+      "INSULT",
+      "PROFANITY",
+      "THREAT",
+      "SEXUALLY_EXPLICIT",
+      "FLIRTATION",
+    ];
+
+    console.log("perspectiveResult:", JSON.stringify(perspectiveResult));
+
+    const shouldReject = attributes.some((attr) => {
+      const score =
+        perspectiveResult.attributeScores[attr]?.summaryScore?.value || 0;
+      return score > 0.5;
+    });
+
+    if (shouldReject) {
+      return { shouldReject: true, methodsUsed };
+    }
+  }
+
+  return { shouldReject: false, methodsUsed };
+};
+
 module.exports = {
+  go,
   verifyWithLevenshtein,
   verifyWithComprehend,
   verifyWithPerspectiveAPI,

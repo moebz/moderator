@@ -3,9 +3,20 @@ const {
   verifyWithLevenshtein,
   verifyWithComprehend,
   verifyWithPerspectiveAPI,
+  go,
 } = require("./service");
 
 async function verifyRoutes(fastify) {
+  fastify.post("/go", async (request, reply) => {
+    const { text } = request.body;
+    const apiClientToken = request.headers["x-api-key"];
+    await dbHandler(
+      fastify,
+      (client) => go(client, apiClientToken, text),
+      reply
+    );
+  });
+
   fastify.post("/leven", async (request, reply) => {
     const { text } = request.body;
     await dbHandler(
