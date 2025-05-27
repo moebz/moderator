@@ -122,7 +122,7 @@ const go = async (client, apiClientToken, text) => {
     const levenResult = await verifyWithLevenshtein(client, text);
 
     if (levenResult.match) {
-      return { shouldReject: true };
+      return { shouldReject: true, methodsUsed };
     }
   }
 
