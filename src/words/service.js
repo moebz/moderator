@@ -1,8 +1,20 @@
 const fs = require("fs");
 const path = require("path");
 
+const createWordsTable = async (client) => {
+  const query = `
+    CREATE TABLE IF NOT EXISTS public.words (
+      id serial4 NOT NULL,
+      word text NOT NULL,
+      CONSTRAINT words_pkey PRIMARY KEY (id)
+    );
+    `;
+  const result = await client.query(query);
+  return result;
+};
+
 const insertWordsFromFile = async (client) => {
-  const filePath = path.join(__dirname, "../../badWords.json");
+  const filePath = path.join(__dirname, "./badWords.json");
   const data = fs.readFileSync(filePath, "utf8");
   const words = JSON.parse(data);
 
@@ -45,6 +57,7 @@ const searchWord = async (client, query) => {
 };
 
 module.exports = {
+  createWordsTable,
   insertWordsFromFile,
   addWord,
   searchWord,

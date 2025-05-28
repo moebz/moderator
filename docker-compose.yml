@@ -1,0 +1,29 @@
+services:
+  api:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://postgres:123456@db:5432/moderator
+    depends_on:
+      - db
+    restart: always
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: moderator
+    # Descomentar solamente si se necesita abrir el puerto al host.
+    # ports:
+    #   - "5432:5432"
+    volumes:
+      # Activar el plugin de fuzzystrmatch para poder usar levenshtein
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      # Persist database data using a named volume.
+      - db_data:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  db_data:

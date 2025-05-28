@@ -5,9 +5,18 @@ const {
   addWord,
   searchWord,
   getAllWords,
+  createWordsTable,
 } = require("./service");
 
 async function wordRoutes(fastify) {
+  fastify.post(
+    "/create-words-table",
+    { preHandler: adminAuth },
+    async (request, reply) => {
+      await dbHandler(fastify, createWordsTable, reply);
+    }
+  );
+
   fastify.post(
     "/add/multiple",
     { preHandler: adminAuth },

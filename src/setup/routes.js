@@ -10,6 +10,10 @@ const { dbHandler } = require("../utils/dbHandler");
 const { adminAuth } = require("../middleware/adminAuth");
 
 async function setupRoutes(fastify) {
+  fastify.get("/ping", async (request, reply) => {
+    return { message: "pong" };
+  });
+
   fastify.get(
     "/test-connection",
     { preHandler: adminAuth },
