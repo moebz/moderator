@@ -14,6 +14,13 @@ const createWordsTable = async (client) => {
 };
 
 const insertWordsFromFile = async (client) => {
+  // No ejecutar si ya hay palabras
+  const checkQuery = "SELECT COUNT(*) FROM words";
+  const checkResult = await client.query(checkQuery);
+  if (Number(checkResult.rows[0].count) > 0) {
+    return { success: false, message: "Words already exist in the database." };
+  }
+
   const filePath = path.join(__dirname, "./badWords.json");
   const data = fs.readFileSync(filePath, "utf8");
   const words = JSON.parse(data);

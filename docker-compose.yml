@@ -25,5 +25,15 @@ services:
       - db_data:/var/lib/postgresql/data
     restart: always
 
+  initializer:
+    image: curlimages/curl
+    depends_on:
+      - api
+    command: ["sh", "/scripts/initializer.sh"]
+    volumes:
+      - ./initializer.sh:/scripts/initializer.sh  
+    env_file:
+      - .env # para que el script pueda acceder al api key de admin  
+
 volumes:
   db_data:
